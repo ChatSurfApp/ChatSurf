@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ChatSurf</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/style.css" rel="stylesheet" />
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"
+      integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/discord-markdown@2.5.1/dist/discord-markdown.min.js"></script>
+    <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
+    <script src="/bsutils.js"></script>
+    <script src="/emoji_list.js"></script>
+    <script src="/theme.js"></script>
+  </head>
+  <body>
+    <div class="container m-0 vh-100">
+      <div class="row h-100 vw-100">
+        <div
+          id="room-list"
+          class="col-4 p-1 h-100 d-flex flex-column border-end overflow-auto"
+        >
+          <div class="m-1 p-3 d-flex align-items-center">
+            <span class="open-settings me-2 material-icons">settings</span>
+            <span class="flex-grow-1">ChatSurf</span>
+            <span class="material-icons">person</span>
+            <span id="online">— ??? online</span>
+          </div>
+        </div>
+        <div id="messages" class="col position-relative overflow-auto mb-5">
+          <form class="position-fixed bottom-0 d-flex w-50">
+            <div class="m-2 flex-grow-1">
+              <label class="visually-hidden" for="message"
+                >Send a Message</label
+              >
+              <input
+                type="text"
+                class="form-control w-100"
+                name="message"
+                id="message"
+                placeholder="Send a Message"
+              />
+            </div>
+            <div class="m-2">
+              <button type="submit" class="btn btn-primary material-icons">
+                send
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script>
+      var currentRoom = decodeURI(location.pathname.split("/")[2]);
+
+      var socket = io({
+        reconnection: false,
+        auth: {
+          sessionID: localStorage.getItem("sessionID") || "",
+          username: localStorage.getItem("username"),
+          room: currentRoom
+        }
+      });
+
+      fetch("/api/rooms").then(async res => {
+        var rooms = await res.json();
+        rooms.forEach(room => {
+          $("#room-list").append(
+            `<a href="/chat/${room}" class="btn m-1 p-3 bg-light${
+              room === currentRoom ? " activechannel" : ""
+            }">#${room}</a>`
+          );
+        });
+      });
+
+      socket.on("connect_error", err => {
+        $(
+          makeModal({
+            header: "Connection Error",
+            body: "Error while connecting. Reason: " + err.message
+          })
+        )
+          .modal("show")
+          .on("hide.bs.modal", () => {
+            location = "/";
+          });
+      });
+
+      socket.on("disconnect", reason => {
+        $(
+          makeModal({
+            header: "Disconnected",
+            body: "You were disconnected. Reason: " + reason
+          })
+        )
+          .modal("show")
+          .on("hide.bs.modal", () => {
+            location = "/";
+          });
+      });
+
+      socket.on("kick", reason => {
+        socket.off("disconnect");
+        $(
+          makeModal({
+            header: "Disconnected",
+            body: "You were kicked. Reason: " + reason
+          })
+        )
+          .modal("show")
+          .on("hide.bs.modal", () => {
+            location = "/";
+          });
+      });
+      
+      socket.on("session", session => {
+        localStorage.setItem("sessionID", session.sessionID)
+      })
+
+      socket.on("update_users", count => {
+        $("#online").html(`— ${count} online`);
+      });
+
+      socket.on("new_message", message => {
+        $("#messages").append(
+          makeMsg({
+            username: message.author.username,
+            message: message.content,
+            badge: message.author.badge
+          })
+        );
+      });
+
+      $("form").on("submit", ev => {
+        ev.preventDefault();
+
+        $("#messages").animate({ scrollTop: $("#messages").height() }, 1000);
+        socket.emit("send_message", $("#message").val());
+        $("#message").val("");
+      });
+      
+      $(".open-settings").click(() => {
+        $(makeModal({
+          header: "Settings",
+          body: `
+          <p>Username: ${localStorage.getItem("username")}</p>
+          <p>Session ID (Do not share): <a href="#" onclick="this.innerText = localStorage.getItem('sessionID')">Show</a></p>
+          `,
+          fullscreen: true
+        })).modal("show")
+      })
+    </script>
+  </body>
+</html>

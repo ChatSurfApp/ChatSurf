@@ -1,0 +1,21 @@
+{
+  "name": "chatsurf",
+  "version": "1.0.0",
+  "description": "ChatSurf client and server",
+  "author": "C1200",
+  "main": "index.js",
+  "scripts": {
+    "start": "node .",
+    "build-sass": "sass sass/custombs.scss public/custombs.css"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "lodash": "^4.17.21",
+    "socket.io": "^4.4.0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "bootstrap": "^5.1.3",
+    "sass": "^1.45.0"
+  }
+}

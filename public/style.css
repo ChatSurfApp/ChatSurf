@@ -1,0 +1,15 @@
+@import url("custombs.css");
+@import url("https://fonts.googleapis.com/icon?family=Material+Icons");
+
+a, a:hover {
+  color: var(--bs-primary);
+}
+
+.activechannel {
+  color: #fff !important;
+  background: var(--bs-primary) !important;
+}
+
+.emoji, .d-emoji, .d-emoji-animated {
+  height: 18px;
+}

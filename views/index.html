@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ChatSurf</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/style.css" rel="stylesheet" />
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
+    <script src="/theme.js"></script>
+  </head>
+  <body>
+    <form
+      action="/chat"
+      class="position-absolute top-50 start-50 translate-middle d-flex"
+    >
+      <div class="m-2">
+        <label class="visually-hidden" for="username">Username</label>
+        <div class="input-group has-validation">
+          <div class="input-group-text">@</div>
+          <input
+            type="text"
+            class="form-control"
+            name="username"
+            id="username"
+            placeholder="Username"
+          />
+          <div class="invalid-feedback">
+            Please choose a valid username.
+          </div>
+        </div>
+      </div>
+      <div class="m-2">
+        <button type="submit" class="btn btn-primary material-icons">
+          login
+        </button>
+      </div>
+    </form>
+    <script>
+      var validateUsername = username =>
+        username.match(/^[a-zA-Z0-9]+$/) !== null;
+
+      $("form").on("submit", ev => {
+        var username = $("#username").val();
+
+        ev.preventDefault();
+
+        if (!validateUsername(username)) {
+          $("#username").addClass("is-invalid");
+        } else {
+          localStorage.setItem("username", username);
+          $("#username").removeClass("is-invalid");
+
+          fetch("/api/rooms").then(async res => {
+            var rooms = await res.json();
+            location = "/chat/" + rooms[0];
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
