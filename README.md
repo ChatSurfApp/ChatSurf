@@ -9,9 +9,8 @@ A real-time chat app.
 Run:
 
 ```bash
-git clone https://github.com/ChatSurfApp/ChatSurf.git
-cd ChatSurf
-npm start
+npm i -g chatsurf-cli
+chatsurf-cli create
 ```
 
 ---
@@ -24,7 +23,7 @@ npm start
 
 #### Installing
 
-1. Drag the .js file into the plugins folder.
+1. Run: `chatsurf-cli install <package-name>`
 2. Restart ChatSurf.
 
 ---
